@@ -27,6 +27,9 @@
     <ClInclude Include="PennAppsFrontend.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PennAppsFrontend.cpp">

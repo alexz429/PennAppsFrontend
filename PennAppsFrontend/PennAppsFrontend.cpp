@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "PennAppsFrontend.h"
 #include <map>
+#include "json.hpp"
 
 #define IDC_MAIN_EDIT 101
 #define MAX_LOADSTRING 100
@@ -52,21 +53,15 @@ HFONT getFont(LPCWSTR fontChoice) {
 	return CreateFont(-17, 0, 0, 0, 0, FALSE, 0, 0, 0, 0, 0, 0, 0, fontChoice);
 }
 
+HFONT setFont(HDC hdc, long fontSize, LPCWSTR fontChoice, UINT weight, bool isItalic) {
+	HFONT hf;
+
+	hf = CreateFont(fontSize, 0, 0, 0, weight, FALSE, isItalic, 0, 0, 0, 0, 0, 0, fontChoice);
+	SelectObject(hdc, hf);
+	return hf;
+}
 void setFont(HWND hw, LPCWSTR fontChoice) {
 	SendMessage(hw, WM_SETFONT, (WPARAM)getFont(fontChoice), TRUE);
-}
-
-HWND createTitleBox() {
-	int x = 300;
-	int y = 65 + optionYOffset;
-	int w = 250;
-	int h = 30;
-
-	HWND hw = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", L"",
-		WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-		x, y, w, h, parentWindow, (HMENU)IDC_MAIN_EDIT, GetModuleHandle(NULL), NULL);
-	setFont(hw, defaultFontType);
-	return hw;
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -78,31 +73,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
-	parentWindow = CreateWindow(
-		szWindowClass,
-		szTitle,
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT,
-		frameWidth, frameHeight,
-		NULL,
-		NULL,
-		hInstance,
-		NULL
-	);
+	
 
 	initColourScheme();
-	titleBox = createTitleBox();
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_PENNAPPSFRONTEND, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
-
+	
     // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
+    /*if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
-    }
-
+    }*/
+	parentWindow = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+		0, 0, frameWidth, frameHeight, nullptr, nullptr, hInstance, nullptr);
+	if (!parentWindow)
+	{
+		return FALSE;
+	}
+	ShowWindow(parentWindow, nCmdShow);
+	UpdateWindow(parentWindow);
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_PENNAPPSFRONTEND));
 
     MSG msg;
@@ -188,40 +179,63 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
-    {
-    case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+	PAINTSTRUCT ps;
+	HDC hdc;
+	HFONT g_hfFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+	COLORREF g_rgbText = RGB(0, 0, 0);
+	TCHAR frameTitle[] = _T("Hand Spoken");
+	switch (message)
+	{
+	case WM_COMMAND:
+	{
+		int wmId = LOWORD(wParam);
+		// Parse the menu selections:
+		switch (wmId)
+		{
+		case IDM_ABOUT:
+			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+			break;
+		case IDM_EXIT:
+			DestroyWindow(hWnd);
+			break;
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
+		}
+	}
+	break;
+	case WM_PAINT:
+	{
+		PAINTSTRUCT ps;
+		hdc = BeginPaint(hWnd, &ps);
+		// TODO: Add any drawing code that uses hdc here...
+		HBRUSH navbarBrush = CreateSolidBrush(colourScheme.at(L"midBlue"));
+		RECT navbar;
+		navbar.left = 0;
+		navbar.right = frameWidth;
+		navbar.top = 0;
+		navbar.bottom = 80;
+
+		FillRect(hdc, &navbar, navbarBrush);
+
+
+
+
+		setFont(hdc, 45, defaultFontType, FW_DONTCARE, false);
+		SetBkMode(hdc, TRANSPARENT);
+		SetTextColor(hdc, colourScheme.at(L"white"));
+		TextOut(hdc,
+			635, 15,
+			frameTitle, _tcslen(frameTitle));
+		EndPaint(hWnd, &ps);
+	}
+	break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
 }
 
 // Message handler for about box.

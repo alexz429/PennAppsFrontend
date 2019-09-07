@@ -1,0 +1,7 @@
+﻿  PennAppsFrontend.cpp
+C:\Users\alex.zhang\Documents\2019-2020\PennApps\PennAppsFrontend\PennAppsFrontend\PennAppsFrontend.cpp(182,14): warning C4101:  'ps': unreferenced local variable
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 113 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  PennAppsFrontend.vcxproj -> C:\Users\alex.zhang\Documents\2019-2020\PennApps\PennAppsFrontend\PennAppsFrontend\Release\PennAppsFrontend.exe
